@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - master
+      - develop
     types:
       - opened
       - synchronize
@@ -12,6 +13,29 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:18
+
+        env:
+          POSTGRES_DB: db_usuario
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+
+        ports:
+          - 5432:5432
+
+        options: >-
+          --health-cmd="pg_isready -U postgres -d db_usuario"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
+    env:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/db_usuario
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: postgres
 
     steps:
       - name: Checkout repository
@@ -36,6 +60,3 @@ jobs:
 
       - name: Build with Gradle
         run: ./gradlew build
-
-      - name: Run tests
-        run: ./gradlew test
